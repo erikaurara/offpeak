@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OFFPEAK — go where it's cheap and weird</title>
+<meta name="description" content="Pick a feeling and a budget. We find the month it's cheap.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFF0CE">
+<meta name="color-scheme" content="light only">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="OFFPEAK">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light only;--paper:#FFF0CE;--paper-2:#FFE2A0;--ink:#241A12;--pink:#FF2D7E;--blue:#1F45FF;--aqua:#00D4A6;--white:#FFFDF7;--shadow:4px 4px 0 var(--ink);--shadow-sm:3px 3px 0 var(--ink)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#FFF0CE}
+body{background:var(--paper);color:var(--ink);font-family:"Instrument Sans",-apple-system,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,.display{font-family:"Bricolage Grotesque","Instrument Sans",sans-serif;font-weight:800;letter-spacing:-.035em;line-height:.94}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+.mono{font-family:"DM Mono",monospace}
+
+.nav{position:sticky;top:0;z-index:60;background:var(--paper);border-bottom:3px solid var(--ink)}
+.nav-in{display:flex;align-items:center;gap:14px;height:62px}
+.logo{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:24px;letter-spacing:-.05em;text-decoration:none}
+.logo span{color:var(--pink)}
+.nav-links{display:flex;gap:20px;margin-left:26px;font-size:15px}
+.nav-links a{text-decoration:none;padding:3px 0;border-bottom:2px solid transparent}
+.nav-links a:hover,.nav-links a.on{border-bottom-color:var(--ink)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.saved-chip{display:flex;align-items:center;gap:6px;border:2px solid var(--ink);border-radius:999px;padding:6px 13px;font-size:14px;font-weight:600;background:var(--white);text-decoration:none}
+.saved-chip.full{background:var(--pink);color:var(--white)}
+.btn{font-family:inherit;font-size:15px;font-weight:600;border:2.5px solid var(--ink);border-radius:999px;padding:10px 20px;cursor:pointer;background:var(--white);color:var(--ink);box-shadow:var(--shadow-sm);transition:transform .08s ease,box-shadow .08s ease;text-decoration:none;display:inline-block}
+.btn:hover{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:var(--shadow-sm);transform:none}
+.btn-pink{background:var(--pink);color:var(--white)}
+.btn-blue{background:var(--blue);color:var(--white)}
+.btn-lg{font-size:18px;padding:15px 30px}
+@media(max-width:720px){.nav-links{display:none}}
+
+.hero{position:relative;padding:76px 0 60px;overflow:hidden}
+.hero h1{font-size:clamp(50px,10.5vw,124px);max-width:12ch}
+.blank{display:inline-block;background:var(--pink);color:var(--white);padding:0 .16em .06em;border:3px solid var(--ink);border-radius:10px;box-shadow:5px 5px 0 var(--ink);min-width:5ch}
+.caret{display:inline-block;width:.07em;height:.78em;background:var(--white);vertical-align:-.03em;margin-left:.04em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.hero-sub{font-size:clamp(18px,2.4vw,25px);max-width:34ch;margin-top:30px;line-height:1.35;font-weight:500}
+.hero-btns{display:flex;flex-wrap:wrap;gap:13px;margin-top:34px}
+.stamp{position:absolute;font-family:"DM Mono",monospace;font-size:12px;border:2.5px solid;border-radius:6px;padding:8px 11px;line-height:1.25;text-align:center;opacity:.9;pointer-events:none}
+.stamp-1{top:96px;right:3%;color:var(--blue);border-color:var(--blue);transform:rotate(-11deg)}
+.stamp-2{top:250px;right:12%;color:var(--aqua);border-color:var(--aqua);transform:rotate(7deg)}
+.stamp-3{bottom:56px;right:5%;color:var(--pink);border-color:var(--pink);transform:rotate(-5deg)}
+@media(max-width:900px){.stamp{display:none}}
+
+.picker{background:var(--paper-2);border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:38px 0 34px}
+.picker h2{font-size:26px;margin-bottom:15px}
+.pills{display:flex;flex-wrap:wrap;gap:9px}
+.pill{font-family:inherit;font-size:15px;font-weight:600;border:2.5px solid var(--ink);border-radius:999px;background:var(--white);color:var(--ink);padding:9px 17px;cursor:pointer}
+.pill:hover{transform:translateY(-2px)}
+.pill[aria-pressed="true"]{background:var(--blue);color:var(--white);box-shadow:var(--shadow-sm)}
+.budget{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:28px}
+.budget label{font-size:16px;font-weight:600;white-space:nowrap}
+.budget input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:200px;height:14px;border:2.5px solid var(--ink);border-radius:999px;background:var(--white)}
+.budget input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--pink);border:2.5px solid var(--ink);margin-top:-1px}
+.budget input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--pink);border:2.5px solid var(--ink)}
+.budget-val{font-family:"DM Mono",monospace;font-size:19px;background:var(--aqua);border:2.5px solid var(--ink);border-radius:8px;padding:4px 11px;white-space:nowrap}
+
+.results{padding:44px 0 66px}
+.results-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:30px}
+.results-head h2{font-size:clamp(30px,5vw,46px)}
+.count{font-family:"DM Mono",monospace;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:26px 22px}
+.tag{position:relative;background:var(--white);border:3px solid var(--ink);border-radius:8px;box-shadow:var(--shadow);padding:36px 18px 18px;cursor:pointer;text-align:left;font-family:inherit;color:inherit;display:flex;flex-direction:column;gap:11px;transition:transform .12s ease;text-decoration:none}
+.tag:nth-child(3n+1){transform:rotate(-1.1deg)}
+.tag:nth-child(3n+2){transform:rotate(.8deg)}
+.tag:nth-child(3n){transform:rotate(-.4deg)}
+.tag:hover,.tag:focus-visible{transform:rotate(0) translateY(-4px)}
+.hole{position:absolute;top:13px;left:50%;transform:translateX(-50%);width:34px;height:13px;border:2.5px solid var(--ink);border-radius:999px;background:var(--paper)}
+.tag.hit{background:var(--aqua)}
+.tag-city{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:29px;letter-spacing:-.03em;line-height:1}
+.tag-country{font-size:14px;opacity:.66;margin-top:3px}
+.tag-why{font-size:15px;line-height:1.4}
+.tag-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:12px;border-top:2px dashed var(--ink)}
+.price{font-family:"DM Mono",monospace;font-size:19px}
+.days{font-family:"DM Mono",monospace;font-size:13px;opacity:.7}
+.tag-vibes{display:flex;flex-wrap:wrap;gap:5px}
+.vibe-tag{font-size:12px;font-weight:600;border:2px solid var(--ink);border-radius:999px;padding:2px 9px;background:var(--paper-2)}
+.heart{position:absolute;top:11px;right:11px;width:33px;height:33px;border:2.5px solid var(--ink);border-radius:50%;background:var(--white);cursor:pointer;font-size:15px;display:grid;place-items:center;padding:0;z-index:2}
+.heart[aria-pressed="true"]{background:var(--pink)}
+.empty{border:3px dashed var(--ink);border-radius:12px;padding:44px 26px;text-align:center;grid-column:1/-1}
+.empty h3{font-size:26px;margin-bottom:8px}
+.empty p{max-width:42ch;margin:0 auto 18px}
+
+.back{display:inline-block;font-size:15px;font-weight:600;margin:26px 0 18px;text-decoration:none;border-bottom:2px solid var(--ink)}
+.trip-head{display:grid;grid-template-columns:1.4fr 1fr;gap:40px;align-items:end;padding-bottom:34px;border-bottom:3px solid var(--ink)}
+@media(max-width:840px){.trip-head{grid-template-columns:1fr;gap:24px;align-items:start}}
+.trip-head h1{font-size:clamp(52px,10vw,104px)}
+.trip-loc{font-size:19px;margin-top:10px;opacity:.7}
+.pricebox{background:var(--white);border:3px solid var(--ink);border-radius:10px;box-shadow:var(--shadow);padding:20px}
+.pricebox .big{font-family:"DM Mono",monospace;font-size:38px;line-height:1}
+.pricebox .sub{font-size:14px;opacity:.7;margin-top:6px}
+.pricebox .btn{width:100%;text-align:center;margin-top:12px}
+.feeline{font-family:"DM Mono",monospace;font-size:15px;background:var(--aqua);border:2.5px solid var(--ink);border-radius:8px;padding:7px 11px;margin-top:12px;text-align:center}
+.fee-sm{display:block;font-family:"Instrument Sans",sans-serif;font-size:13px;font-weight:600;opacity:.7;margin-top:3px}
+.feebox{background:var(--paper-2);border:2.5px solid var(--ink);border-radius:9px;padding:6px 16px}
+
+.modes{padding:38px 0;border-bottom:3px solid var(--ink)}
+.modes h2{font-size:30px;margin-bottom:6px}
+.modes .lede{font-size:16px;opacity:.75;margin-bottom:22px;max-width:54ch}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.mode-grid{grid-template-columns:1fr}}
+.mode{border:3px solid var(--ink);border-radius:12px;background:var(--white);padding:22px;text-align:left;font-family:inherit;color:inherit;cursor:pointer;box-shadow:var(--shadow)}
+.mode h3{font-size:24px;margin-bottom:6px}
+.mode .tagline{font-size:15px;opacity:.75;margin-bottom:14px}
+.mode ul{margin:0 0 14px 18px;font-size:15px}
+.mode li{margin-bottom:5px}
+.mode .amt{font-family:"DM Mono",monospace;font-size:22px;border-top:2px dashed var(--ink);padding-top:12px}
+.mode[aria-pressed="true"]{background:var(--aqua)}
+.mode[aria-pressed="true"] .picked{display:inline-block}
+.picked{display:none;background:var(--ink);color:var(--paper);font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;margin-left:8px;vertical-align:middle}
+
+.months{padding:38px 0;border-bottom:3px solid var(--ink)}
+.months h2{font-size:30px;margin-bottom:6px}
+.months .lede{font-size:16px;opacity:.75;margin-bottom:22px;max-width:54ch}
+.month-strip{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+@media(max-width:720px){.month-strip{grid-template-columns:repeat(6,1fr)}}
+.month{border:2.5px solid var(--ink);border-radius:7px;padding:9px 4px;text-align:center;cursor:pointer;font-family:inherit;background:var(--white);color:var(--ink)}
+.month b{display:block;font-size:14px;font-weight:600}
+.month i{display:block;font-family:"DM Mono",monospace;font-size:11px;font-style:normal;opacity:.75;margin-top:3px}
+.month.cheap{background:var(--aqua)}
+.month.peak{background:var(--pink);color:var(--white)}
+.month[aria-pressed="true"]{background:var(--ink);color:var(--paper);box-shadow:var(--shadow-sm)}
+
+.cols{display:grid;grid-template-columns:1.3fr 1fr;gap:44px;padding:40px 0}
+@media(max-width:840px){.cols{grid-template-columns:1fr;gap:32px}}
+.cols h2{font-size:30px;margin-bottom:18px}
+.shape li{list-style:none;padding:14px 0;border-bottom:2px dashed var(--ink);font-size:17px}
+.shape li:last-child{border-bottom:none}
+.stop{display:flex;gap:14px;padding:14px 0;border-bottom:2px dashed var(--ink)}
+.stop:last-child{border-bottom:none}
+.stop-n{width:30px;height:30px;flex-shrink:0;border:2.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-family:"DM Mono",monospace;font-size:14px;background:var(--paper-2)}
+.stop b{font-size:18px;display:block}
+.stop .n{font-family:"DM Mono",monospace;font-size:13px;opacity:.7}
+.stop p{font-size:16px;margin-top:3px}
+.breakdown{background:var(--paper-2);border:3px solid var(--ink);border-radius:10px;padding:20px}
+.brow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1.5px solid rgba(36,26,18,.2);font-size:16px}
+.brow:last-of-type{border-bottom:none}
+.brow span:last-child{font-family:"DM Mono",monospace}
+.brow.total{border-top:2.5px solid var(--ink);margin-top:8px;padding-top:12px;font-weight:600;border-bottom:none}
+.onething{background:var(--blue);color:var(--white);border:3px solid var(--ink);border-radius:10px;padding:22px;margin-top:24px}
+.onething h3{font-size:20px;margin-bottom:8px}
+
+.split{background:var(--blue);color:var(--white);border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:66px 0}
+.split-in{display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:center}
+@media(max-width:840px){.split-in{grid-template-columns:1fr;gap:34px}}
+.split h2{font-size:clamp(34px,6vw,60px);max-width:13ch}
+.split p{margin-top:20px;max-width:36ch;font-size:18px}
+.pass{background:var(--white);color:var(--ink);border:3px solid var(--ink);border-radius:12px;box-shadow:8px 8px 0 var(--ink);overflow:hidden}
+.pass-top{background:var(--pink);color:var(--white);border-bottom:3px dashed var(--ink);padding:15px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pass-top .display{font-size:21px}
+.pass-top span{font-family:"DM Mono",monospace;font-size:13px;text-align:right}
+.pass-body{padding:18px 20px 22px}
+.friend{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1.5px solid rgba(36,26,18,.16)}
+.friend:last-of-type{border-bottom:none}
+.avatar{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--ink);display:grid;place-items:center;font-weight:600;font-size:14px;flex-shrink:0}
+.friend-name{font-weight:600;font-size:16px}
+.friend-amt{margin-left:auto;font-family:"DM Mono",monospace;font-size:16px}
+.paid-btn{font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:2px solid var(--ink);border-radius:999px;padding:3px 11px;background:var(--white)}
+.paid-btn[aria-pressed="true"]{background:var(--aqua)}
+.pass-foot{border-top:3px dashed var(--ink);padding:15px 20px;background:var(--paper)}
+.pass-foot .r{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:3px 0}
+.pass-foot b{font-family:"DM Mono",monospace;font-size:22px}
+
+/* split flow page */
+.flow{display:grid;grid-template-columns:1.25fr 1fr;gap:40px;padding:10px 0 70px;align-items:start}
+@media(max-width:900px){.flow{grid-template-columns:1fr;gap:28px}}
+.flow h1{font-size:clamp(40px,7vw,72px);margin-bottom:10px}
+.flow .lede{font-size:18px;opacity:.75;margin-bottom:30px;max-width:44ch}
+.block{border:3px solid var(--ink);border-radius:12px;background:var(--white);padding:22px;margin-bottom:20px}
+.block h2{font-size:22px;margin-bottom:4px}
+.block .hint{font-size:15px;opacity:.7;margin-bottom:16px}
+.person{display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1.5px solid rgba(36,26,18,.15)}
+.person:last-child{border-bottom:none}
+.person .who{font-weight:600}
+.person .you{font-size:12px;background:var(--paper-2);border:2px solid var(--ink);border-radius:999px;padding:1px 9px}
+.rm{margin-left:auto;border:2px solid var(--ink);background:var(--white);border-radius:50%;width:26px;height:26px;cursor:pointer;font-family:inherit;line-height:1;font-size:15px}
+.rm:hover{background:var(--pink);color:var(--white)}
+.addrow{display:flex;gap:9px;margin-top:16px}
+.addrow input{flex:1;min-width:0;font-family:inherit;font-size:16px;border:2.5px solid var(--ink);border-radius:999px;padding:10px 16px;background:var(--paper);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chip{font-family:inherit;font-size:15px;font-weight:600;border:2.5px solid var(--ink);border-radius:999px;background:var(--white);padding:8px 16px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--blue);color:var(--white);box-shadow:var(--shadow-sm)}
+.deadline-note{margin-top:14px;font-size:15px;background:var(--paper-2);border:2.5px solid var(--ink);border-radius:8px;padding:11px 14px}
+.linkbox{display:flex;gap:9px;margin-top:8px}
+.linkbox input{flex:1;min-width:0;font-family:"DM Mono",monospace;font-size:14px;border:2.5px solid var(--ink);border-radius:8px;padding:11px 13px;background:var(--paper);color:var(--ink)}
+.rules{font-size:15px;margin-top:16px}
+.rules li{margin-bottom:7px;margin-left:18px}
+.sticky{position:sticky;top:82px}
+.warn{background:var(--pink);color:var(--white);border:3px solid var(--ink);border-radius:10px;padding:16px 18px;font-size:16px;margin-top:18px}
+
+.saved-head{padding:34px 0 30px}
+.saved-head h1{font-size:clamp(40px,8vw,80px)}
+.saved-total{display:flex;flex-wrap:wrap;gap:14px;margin-top:24px}
+.stat{background:var(--white);border:3px solid var(--ink);border-radius:10px;box-shadow:var(--shadow-sm);padding:14px 18px}
+.stat b{display:block;font-family:"DM Mono",monospace;font-size:26px;line-height:1.1}
+.stat span{font-size:14px;opacity:.7}
+
+.about{padding:40px 0 70px;max-width:62ch}
+.about h1{font-size:clamp(40px,8vw,78px);margin-bottom:28px}
+.about h2{font-size:28px;margin:38px 0 12px}
+.about p{margin-bottom:15px}
+.about ul{margin:0 0 15px 20px}
+.about li{margin-bottom:8px}
+
+.says{padding:66px 0}
+.says h2{font-size:clamp(30px,5vw,46px);margin-bottom:34px;max-width:16ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:24px}
+.card{border:3px solid var(--ink);border-radius:6px;padding:20px;box-shadow:var(--shadow);background:var(--white)}
+.card:nth-child(2){background:var(--aqua);transform:rotate(1deg)}
+.card:nth-child(3){background:var(--paper-2);transform:rotate(-1deg)}
+.card footer{margin-top:15px;font-family:"DM Mono",monospace;font-size:13px;opacity:.72}
+.cta{background:var(--ink);color:var(--paper);padding:76px 0 40px}
+.cta h2{font-size:clamp(38px,8vw,86px);max-width:11ch}
+.cta p{margin-top:20px;max-width:34ch;font-size:18px;opacity:.85}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.foot{margin-top:60px;padding-top:22px;border-top:2px solid rgba(255,240,206,.28);display:flex;flex-wrap:wrap;gap:18px;font-size:14px;opacity:.7}
+.foot a{text-decoration:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="wrap nav-in">
+  <a class="logo" href="#/">OFF<span>PEAK</span></a>
+  <div class="nav-links" id="navLinks"><a href="#/">Home</a><a href="#/about">How it works</a></div>
+  <div class="nav-right">
+    <a class="saved-chip" id="savedChip" href="#/saved">♥ <b id="savedCount">0</b> saved</a>
+    <a class="btn btn-pink" href="#/about">Get the app</a>
+  </div>
+</div></nav>
+
+<div id="app"></div>
+
+<script>
+/* ==========================================================
+   WHAT YOU CHARGE, PER PERSON. This is the only revenue line.
+   Change these two numbers and the whole app reprices.
+   ========================================================== */
+const FEE={solo:6, planned:20};
+
+const VIBES=["eat till unwell","beach, but weird","cold & cozy","nobody knows me here","3am cities","touch grass","broke & unbothered"];
+const M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+const TRIPS=[
+{id:"danang",city:"Da Nang",country:"Vietnam",price:453,days:5,flights:253,bed:200,vibes:["eat till unwell","beach, but weird","broke & unbothered"],why:"Beach in the morning, ₫30,000 bánh mì at night.",one:"Bà Nà Hills is a tourist trap. The Hải Vân Pass on a rented bike is not.",shape:["My Khe beach early, before the heat arrives.","Ride the Hải Vân Pass north — three hours of pure coastline.","One night in Hội An for the lanterns and a tailor."],route:[["Da Nang",2,"Beach mornings, seafood on Trần Phú at night."],["Hội An",2,"Old town, a tailor fitting, lanterns on the river."],["Huế",1,"The citadel, then the night train or a car back."]],cheap:[1,2,3],peak:[5,6,7]},
+{id:"taipei",city:"Taipei",country:"Taiwan",price:367,days:4,flights:207,bed:160,vibes:["eat till unwell","3am cities"],why:"Night markets that don't close until you give up.",one:"Raohe night market. Black pepper bun stall by the temple entrance, always a queue.",shape:["Land late and eat immediately — markets run past midnight.","Maokong gondola up, tea house at the top, walk down.","Beitou hot springs on your way back to the airport."],route:[["Taipei",2,"Raohe and Ningxia markets, Maokong gondola, Beitou springs."],["Jiufen",1,"Mountain teahouses in the fog. Stay after the day crowd leaves."],["Tainan",1,"The old capital. Best food on the island, fight us."]],cheap:[2,3,10],peak:[6,7]},
+{id:"sapporo",city:"Sapporo",country:"Japan",price:280,days:3,flights:147,bed:133,vibes:["cold & cozy","eat till unwell"],why:"Snow, soup curry, and a very short flight.",one:"Soup curry at Suage, then the Sapporo Beer Garden. In that order, not the reverse.",shape:["Odori Park and the underground food halls.","Day trip to Otaru — the canal and the sushi street.","Onsen in Jōzankei, one hour out of the city."],route:[["Sapporo",2,"Odori, the underground halls, soup curry, Susukino at night."],["Otaru",1,"Canal, glassblowing, and the sushi street before the train back."]],cheap:[4,5,9,10],peak:[0,1,7]},
+{id:"seoul",city:"Seoul",country:"South Korea",price:480,days:4,flights:233,bed:247,vibes:["3am cities","nobody knows me here"],why:"The whole city is open at 2am and nobody cares.",one:"Gwangjang market at 11pm, not at lunchtime. Completely different place.",shape:["Seongsu for coffee and secondhand clothes.","Bukhansan hike — half a day, city views the whole way up.","Euljiro at night. The good bars are behind unmarked doors."],route:[["Seoul",3,"Seongsu, Euljiro, Gwangjang, and half a day up Bukhansan."],["Busan",1,"KTX down in under three hours. Beach, fish market, back."]],cheap:[2,3,10],peak:[6,7,9]},
+{id:"chiangmai",city:"Chiang Mai",country:"Thailand",price:427,days:6,flights:280,bed:147,vibes:["touch grass","broke & unbothered"],why:"Mountains, ¥300 lunches, slow mornings.",one:"Sunday walking street. And skip any elephant place that lets you ride them.",shape:["Old city temples on foot, early, before the heat.","Doi Suthep at sunset.","A cooking class you'll actually use when you get home."],route:[["Chiang Mai",3,"Old city temples, a cooking class, Doi Suthep at sunset."],["Pai",2,"Three hours of hairpins north. Hot springs and nothing to do."],["Chiang Rai",1,"The white temple, then the flight or bus out."]],cheap:[4,5,8],peak:[11,0,1]},
+{id:"lisbon",city:"Lisbon",country:"Portugal",price:1233,days:8,flights:867,bed:366,vibes:["nobody knows me here","beach, but weird"],why:"Hills, tinned fish, and a beach 40 minutes out.",one:"Time Out Market is fine. Cervejaria Ramiro is the one you'll remember.",shape:["Alfama on foot, downhill, following the tram line.","Train to Cascais for the beach — 40 minutes each way.","Sintra for a day. Go early, it fills up by eleven."],route:[["Lisbon",4,"Alfama, Ramiro, a day at Cascais, fado if you're in the mood."],["Sintra",1,"Palaces in the hills. First train up, before the queues."],["Porto",3,"Train north. Port cellars, the river, better food, fewer people."]],cheap:[1,2,10],peak:[6,7,8]},
+{id:"palawan",city:"Palawan",country:"Philippines",price:653,days:6,flights:387,bed:266,vibes:["beach, but weird","touch grass"],why:"Limestone islands and almost no phone signal.",one:"El Nido island hopping Tour C, not Tour A. Fewer boats, better lagoons.",shape:["Fly to Puerto Princesa, then the van north to El Nido.","Two days of island hopping and hidden lagoons.","Nacpan beach by scooter — four kilometres, mostly empty."],route:[["Puerto Princesa",1,"Land, eat, sleep. The van north leaves early."],["El Nido",4,"Tour C, then Tour A if you must. Sunset at Las Cabañas."],["Nacpan",1,"Four kilometres of beach and almost nobody on it."]],cheap:[5,6,8],peak:[11,0,3]},
+{id:"tbilisi",city:"Tbilisi",country:"Georgia",price:1013,days:7,flights:700,bed:313,vibes:["nobody knows me here","broke & unbothered","3am cities"],why:"Sulphur baths, natural wine, nobody you know.",one:"Sulphur baths in Abanotubani. Book a private room, it's about ¥2,000.",shape:["Old town, the wine bars, and the brutalist blocks up the hill.","Day trip to Kazbegi and the church on the ridge.","Kakheti wine region if you've got a spare day."],route:[["Tbilisi",4,"Old town, sulphur baths, natural wine, Bassiani if you last."],["Kazbegi",1,"Three hours north. The church on the ridge, snow on the peak."],["Sighnaghi",2,"Kakheti wine country. Cellars, and a view over the valley."]],cheap:[2,3,10],peak:[6,7,8]},
+{id:"reykjavik",city:"Reykjavík",country:"Iceland",price:1400,days:6,flights:1000,bed:400,vibes:["cold & cozy","touch grass"],why:"Hot springs in the snow. Expensive, worth it once.",one:"Sky Lagoon over the Blue Lagoon. Half the crowd, better view of the sea.",shape:["Golden Circle in a rented car — one long day.","South coast: black sand, waterfalls, a glacier tongue.","Northern lights if it's September to March and the sky's clear."],route:[["Reykjavík",2,"The city in a day, Sky Lagoon, and the Golden Circle loop."],["South Coast",2,"Black sand at Vík, waterfalls, a glacier tongue at Sólheimajökull."],["Snæfellsnes",2,"The peninsula. Everything Iceland has, in one day's drive."]],cheap:[8,9,3,4],peak:[5,6,7]},
+{id:"pokhara",city:"Pokhara",country:"Nepal",price:833,days:8,flights:587,bed:246,vibes:["touch grass","broke & unbothered"],why:"Lake, mountains, and a trek you can actually finish.",one:"Poon Hill trek. Four days, teahouses every night, no camping gear needed.",shape:["Two days in Kathmandu, then fly or bus west.","Phewa lake, paragliding, the good kind of doing nothing.","The trek — four days up and back down."],route:[["Kathmandu",2,"Thamel, Boudhanath, and the permits sorted before you leave."],["Pokhara",2,"Phewa lake, paragliding, one very large breakfast."],["Poon Hill",4,"Four days of teahouses. Sunrise over Annapurna on day three."]],cheap:[1,2,4],peak:[9,10,3]},
+{id:"hongkong",city:"Hong Kong",country:"China SAR",price:413,days:3,flights:267,bed:146,vibes:["eat till unwell","3am cities"],why:"Dim sum at 7am, rooftop at midnight, a hike in between.",one:"Dragon's Back hike, then the bus straight down to Shek O beach.",shape:["Dim sum in Sham Shui Po — cheaper and better than Central.","Dragon's Back to Shek O, about half a day.","Star Ferry after dark. ¥50, best view in the city."],route:[["Hong Kong Island",2,"Dim sum in Sham Shui Po, Dragon's Back, Star Ferry at night."],["Lantau",1,"Big Buddha, then Tai O stilt village on the way to the airport."]],cheap:[4,5,8],peak:[11,0,6]},
+{id:"canggu",city:"Canggu",country:"Indonesia",price:587,days:7,flights:367,bed:220,vibes:["beach, but weird","broke & unbothered"],why:"Surf, scooters, and a smoothie bowl problem.",one:"Learn to surf at Batu Bolong. The beginner break there is genuinely gentle.",shape:["Surf lesson in the morning, nothing at all in the afternoon.","Scooter up to Ubud for the rice terraces and back.","One day on Nusa Penida if you don't mind the boat."],route:[["Canggu",3,"Surf lessons at Batu Bolong, and afternoons doing nothing."],["Ubud",2,"Rice terraces, the monkey forest, a waterfall nobody's at."],["Nusa Penida",2,"Fast boat across. Kelingking, Diamond Beach, back Sunday."]],cheap:[1,2,10],peak:[6,7,11]}
+];
+
+const MODES={
+  solo:{name:"On your own",tagline:"One city, your own pace. We tell you when to go and where to stay.",
+    inc:["The month it's actually cheap to fly","Where to sleep, with the links","What to do, from someone who went","A deadline so the group actually books"]},
+  planned:{name:"Planned for you",tagline:"A route across a few places, worked out end to end.",
+    inc:["Everything in the first one","A route across several cities, in order","Which bed in each place, and why that one","Transport between stops, with times and prices","A local contact who answers messages while you're there"]}
+};
+
+const usd=n=>"$"+Math.round(n).toLocaleString("en-US");
+const byId=id=>TRIPS.find(t=>t.id===id);
+const ratioOf=(t,i)=>t.cheap.includes(i)?.82:t.peak.includes(i)?1.34:1;
+function costs(t,month,mode){
+  const r=ratioOf(t,month), pl=mode==="planned";
+  const flights=t.flights*r, bed=t.bed*r*(pl?1.2:1);
+  const transport=pl?t.days*2200*r:0, planning=pl?6000+t.days*1500:0;
+  return {flights,bed,transport,planning,total:flights+bed+transport+planning};
+}
+
+const active=new Set(), saved=new Set();
+let maxBudget=220000, hitId=null;
+function syncSaved(){
+  document.getElementById("savedCount").textContent=saved.size;
+  document.getElementById("savedChip").classList.toggle("full",saved.size>0);
+}
+
+function tagCard(t){return `<a class="tag${t.id===hitId?" hit":""}" href="#/trip/${t.id}" id="c-${t.id}">
+  <div class="hole"></div>
+  <button class="heart" type="button" data-save="${t.id}" aria-pressed="${saved.has(t.id)}" aria-label="Save ${t.city}">♥</button>
+  <div><div class="tag-city">${t.city}</div><div class="tag-country">${t.country}</div></div>
+  <div class="tag-vibes">${t.vibes.map(v=>`<span class="vibe-tag">${v}</span>`).join("")}</div>
+  <p class="tag-why">${t.why}</p>
+  <div class="tag-meta"><span class="price">${usd(t.price)}</span><span class="days">${t.days} nights</span></div></a>`;}
+
+const ctaBlock=`<section class="cta"><div class="wrap">
+  <h2>Go somewhere in March.</h2>
+  <p>The app has the same vibe search, plus price alerts and the split link. Free, and it doesn't email you.</p>
+  <div class="cta-row"><button class="btn btn-lg btn-pink">Download for iPhone</button><button class="btn btn-lg btn-blue">Download for Android</button></div>
+  <div class="foot"><a href="#/">OFFPEAK</a><a href="#/about">How it works</a><a href="#/saved">Saved</a><a href="#/about">Cancellation</a></div>
+</div></section>`;
+
+/* ---------------- home ---------------- */
+function viewHome(){return `<header class="hero"><div class="wrap">
+  <h1>I want to feel <span class="blank"><span id="vibeWord">unwell</span><span class="caret"></span></span> somewhere.</h1>
+  <p class="hero-sub">Pick a feeling and a budget. We'll find the flights, the beds, and the one thing worth queueing for.</p>
+  <div class="hero-btns"><button class="btn btn-lg btn-pink" id="goPick">Pick my vibe</button><button class="btn btn-lg" id="surpriseBtn">Surprise me</button></div>
+  <div class="stamp stamp-1">no itinerary<br>required</div><div class="stamp stamp-2">cancel free<br>till 14 days</div><div class="stamp stamp-3">split with<br>up to 8 friends</div>
+</div></header>
+<section class="picker" id="pick"><div class="wrap">
+  <h2>How do you want this trip to feel?</h2>
+  <div class="pills">${VIBES.map(v=>`<button class="pill" type="button" data-vibe="${v}" aria-pressed="${active.has(v)}">${v}</button>`).join("")}</div>
+  <div class="budget"><label for="budget">Most I'll spend</label>
+    <input type="range" id="budget" min="40000" max="220000" step="5000" value="${maxBudget}">
+    <div class="budget-val" id="budgetVal">${usd(maxBudget)}</div></div>
+</div></section>
+<main class="results wrap"><div class="results-head"><h2 id="rTitle"></h2><div class="count" id="rCount"></div></div><div class="grid" id="grid"></div></main>
+<section class="split"><div class="wrap split-in">
+  <div><h2>Nobody has to front the money.</h2>
+  <p>Everyone books their own flight and their own bed, at the normal price. We pick the month, name the places, hold the deadline, and chase whoever's ignoring the group chat.</p>
+  <p style="margin-top:22px"><a class="btn btn-lg" href="#/plan/taipei/2/solo">Try it with Taipei</a></p></div>
+  <div class="pass"><div class="pass-top"><div class="display">Taipei</div><span>4 NIGHTS · MAR</span></div>
+  <div class="pass-body" id="friends"></div>
+  <div class="pass-foot"><div class="r"><span>Our fee, each</span><b id="perPerson"></b></div></div></div>
+</div></section>
+<section class="says wrap"><h2>What people actually said afterwards</h2><div class="cards">
+  <div class="card"><p>Booked Da Nang on a Tuesday because I was in a mood. Was eating grilled pork on a plastic stool by Friday. No notes.</p><footer>Mika, 23 · Da Nang, 5 nights</footer></div>
+  <div class="card"><p>Four of us, four different pay days. The split link meant I didn't have to chase anyone in the group chat for six weeks.</p><footer>Renz, 26 · Chiang Mai, 6 nights</footer></div>
+  <div class="card"><p>I said "cold and cozy" and it gave me Sapporo for less than my rent. I didn't know that was a thing you could do.</p><footer>Ari, 21 · Sapporo, 3 nights</footer></div>
+</div></section>${ctaBlock}`;}
+
+/* ---------------- trip ---------------- */
+let selMonth=null, selMode="solo";
+function viewTrip(id){
+  const t=byId(id); if(!t) return viewMissing();
+  if(selMonth===null) selMonth=t.cheap[0];
+  const c=costs(t,selMonth,selMode), pl=selMode==="planned";
+  const nights=pl?t.route.map(r=>r[0]).join(" → "):t.city;
+  return `<div class="wrap">
+  <a class="back" href="#/">Back to all trips</a>
+  <div class="trip-head">
+    <div><h1>${t.city}</h1><div class="trip-loc">${t.country} · ${t.days} nights · ${t.vibes.join(", ")}</div></div>
+    <div class="pricebox">
+      <div class="big">about ${usd(c.total)}</div>
+      <div class="sub">per person, to the airline and the hotel &mdash; you book those yourself, we don't touch them</div>
+      <div class="feeline">Our fee: ${usd(FEE[selMode])} per person</div>
+      <a class="btn btn-pink" href="#/plan/${t.id}/${selMonth}/${selMode}">Plan this with friends</a>
+      <button class="btn" data-save="${t.id}" aria-pressed="${saved.has(t.id)}">${saved.has(t.id)?"♥ Saved":"♥ Save this"}</button>
+    </div>
+  </div>
+
+  <section class="modes">
+    <h2>How much of this do you want handled?</h2>
+    <p class="lede">Same destination, two different trips. Most people take the first one. Pick the second if you're going with people who won't plan, or if it's somewhere you'd rather not work out the buses.</p>
+    <div class="mode-grid">${Object.entries(MODES).map(([k,m])=>{
+      const mc=costs(t,selMonth,k);
+      return `<button class="mode" type="button" data-mode="${k}" aria-pressed="${k===selMode}">
+        <h3>${m.name}<span class="picked">picked</span></h3>
+        <p class="tagline">${m.tagline}</p>
+        <ul>${m.inc.map(i=>`<li>${i}</li>`).join("")}</ul>
+        <div class="amt">about ${usd(mc.total)}<span class="fee-sm">+ ${usd(FEE[k])} our fee</span></div></button>`;}).join("")}</div>
+  </section>
+
+  <section class="months">
+    <h2>When to go, and what it costs</h2>
+    <p class="lede">Same trip, different month. Green months are the cheap ones — that's the whole point of the name. Tap one to reprice.</p>
+    <div class="month-strip">${M.map((m,i)=>{
+      const cls=t.cheap.includes(i)?"cheap":t.peak.includes(i)?"peak":"";
+      return `<button class="month ${cls}" type="button" data-month="${i}" aria-pressed="${i===selMonth}"><b>${m}</b><i>${usd(costs(t,i,selMode).total/1000)}k</i></button>`;}).join("")}</div>
+  </section>
+
+  <div class="cols">
+    <div>
+      <h2>${pl?"Your route":"The shape of it"}</h2>
+      ${pl
+        ? `<div>${t.route.map((r,i)=>`<div class="stop"><div class="stop-n">${i+1}</div>
+            <div><b>${r[0]}</b><span class="n">${r[1]} night${r[1]>1?"s":""}</span><p>${r[2]}</p></div></div>`).join("")}</div>`
+        : `<ul class="shape">${t.shape.map(s=>`<li>${s}</li>`).join("")}</ul>`}
+      <div class="onething"><h3>The one thing we'd insist on</h3><p>${t.one}</p></div>
+    </div>
+    <div>
+      <h2>Where the money goes</h2>
+      <div class="breakdown">
+        <div class="brow"><span>Return flights</span><span>${usd(c.flights)}</span></div>
+        <div class="brow"><span>Beds, ${t.days} nights${pl?" across "+t.route.length+" places":""}</span><span>${usd(c.bed)}</span></div>
+        ${pl?`<div class="brow"><span>Transport between stops</span><span>${usd(c.transport)}</span></div>
+        <div class="brow"><span>Bookings and a local contact</span><span>${usd(c.planning)}</span></div>`:""}
+        <div class="brow"><span>Food and everything else</span><span>yours to spend</span></div>
+        <div class="brow"><span>You book and pay for all of that</span><span>${usd(c.total)}</span></div>
+        <div class="brow total"><span>Our fee, per person</span><span>${usd(FEE[selMode])}</span></div>
+      </div>
+      <p style="margin-top:14px;font-size:15px;opacity:.75">That top number never comes to us. You book the flight and the bed yourself, at the normal price, on whatever site you like. We charge the fee at the bottom and nothing else.</p>
+    </div>
+  </div>
+</div>${ctaBlock}`;}
+
+/* ---------------- split flow ---------------- */
+let people=[{n:"You",paid:true,you:true}], deadlineDays=14, linkMade=false;
+const fmtDate=d=>d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+function deadlineDate(){const d=new Date();d.setDate(d.getDate()+deadlineDays);return d;}
+
+function viewPlan(id,month,mode){
+  const t=byId(id); if(!t||!MODES[mode]) return viewMissing();
+  const c=costs(t,+month,mode), fee=FEE[mode];
+  const done=people.filter(p=>p.paid).length, left=people.length-done;
+  const colors=["var(--pink)","var(--aqua)","var(--blue)","var(--paper-2)"];
+  return `<div class="wrap">
+  <a class="back" href="#/trip/${t.id}">Back to ${t.city}</a>
+  <div class="flow">
+    <div>
+      <h1>Plan ${t.city}</h1>
+      <p class="lede">${MODES[mode].name}, ${t.days} nights, flying in ${M[+month]}. Everyone books their own flight and bed. We make sure it actually happens.</p>
+
+      <div class="block">
+        <h2>Who's coming</h2>
+        <p class="hint">Two to eight people. First names are enough — we don't need their contacts.</p>
+        <div>${people.map((p,i)=>`<div class="person">
+          <div class="avatar" style="background:${colors[i%4]}">${p.n[0].toUpperCase()}</div>
+          <span class="who">${p.n}</span>${p.you?'<span class="you">that\'s you</span>':""}
+          ${p.you?"":`<button class="rm" type="button" data-rm="${i}" aria-label="Remove ${p.n}">×</button>`}
+        </div>`).join("")}</div>
+        <div class="addrow">
+          <input id="nameIn" type="text" placeholder="Add a name" maxlength="18" ${people.length>=8?"disabled":""}>
+          <button class="btn btn-blue" id="addBtn" ${people.length>=8?"disabled":""}>Add</button>
+        </div>
+        ${people.length>=8?'<p class="hint" style="margin:12px 0 0">That\'s the maximum. Bigger groups need two plans.</p>':""}
+      </div>
+
+      <div class="block">
+        <h2>Everyone books by</h2>
+        <p class="hint">Prices move. Pick a date and we'll nudge whoever hasn't booked yet.</p>
+        <div class="chips">${[3,5,7].map(d=>`<button class="chip" type="button" data-dl="${d}" aria-pressed="${d===deadlineDays}">In ${d} days</button>`).join("")}</div>
+        <div class="deadline-note">Everyone books by <b>${fmtDate(deadlineDate())}</b>. Two reminders, not eleven.</div>
+      </div>
+
+      <div class="block">
+        <h2>What we charge</h2>
+        ${linkMade?`
+          <p class="hint">Paid. Here's the link — send it to the group chat.</p>
+          <div class="linkbox"><input id="linkIn" readonly value="offpeak.app/p/${t.id}-${Math.abs(hashOf(people.map(p=>p.n).join()+deadlineDays))}"><button class="btn btn-blue" id="copyBtn">Copy</button></div>
+          <h2 style="margin-top:26px">Who's booked</h2>
+          <div>${people.map((p,i)=>`<div class="person">
+            <div class="avatar" style="background:${colors[i%4]}">${p.n[0].toUpperCase()}</div>
+            <span class="who">${p.n}</span>
+            <button class="paid-btn" type="button" data-paid="${i}" aria-pressed="${p.paid}" style="margin-left:auto">${p.paid?"booked":"not yet"}</button>
+          </div>`).join("")}</div>
+          ${left===0
+            ? `<div class="deadline-note" style="background:var(--aqua)">Everyone's booked. ${t.city} is happening.</div>`
+            : `<div class="warn">${left} ${left===1?"person hasn't":"people haven't"} booked yet. We'll chase them, not you.</div>`}
+        `:`
+          <div class="feebox">
+            <div class="brow"><span>${usd(fee)} × ${people.length} ${people.length===1?"person":"people"}</span><span>${usd(fee*people.length)}</span></div>
+            <div class="brow total"><span>You pay us, once</span><span>${usd(fee*people.length)}</span></div>
+          </div>
+          <p class="hint" style="margin:14px 0 16px">This is the only money that comes to us. The flights and beds you book yourself, at the normal price.</p>
+          <button class="btn btn-lg btn-pink" id="makeLink" ${people.length<2?"disabled":""}>Pay ${usd(fee*people.length)} and get the link</button>
+          ${people.length<2?'<p class="hint" style="margin:12px 0 0">Add at least one other person first.</p>':""}
+        `}
+        <ul class="rules">
+          <li>We never touch the money for your flights or your beds.</li>
+          <li>If the trip falls apart before the deadline, the fee comes back.</li>
+          <li>Book refundable rates and you can change your mind right up to the cutoff.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sticky">
+      <div class="pass">
+        <div class="pass-top"><div class="display">${t.city}</div><span>${t.days} NIGHTS<br>${M[+month].toUpperCase()}</span></div>
+        <div class="pass-body">
+          <div class="friend"><span class="friend-name">${MODES[mode].name}</span><span class="friend-amt">${people.length} going</span></div>
+          <div class="friend"><span class="friend-name">You'll book, roughly</span><span class="friend-amt">${usd(c.total)}</span></div>
+          <div class="friend"><span class="friend-name">Our fee</span><span class="friend-amt">${usd(fee)}</span></div>
+        </div>
+        <div class="pass-foot">
+          <div class="r"><span>Your night, all in</span><b>${usd(c.total+fee)}</b></div>
+          <div class="r" style="font-size:14px;opacity:.7"><span>Book by</span><span class="mono">${fmtDate(deadlineDate())}</span></div>
+        </div>
+      </div>
+      <p style="font-size:15px;opacity:.75;margin-top:16px">${mode==="planned"?"The planned fee covers the route, the beds we picked, and someone local you can message.":"Going planned instead costs "+usd(FEE.planned)+" and we work out the whole route."}</p>
+    </div>
+  </div>
+</div>${ctaBlock}`;}
+function hashOf(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return h%9999;}
+
+/* ---------------- saved / about / missing ---------------- */
+function viewSaved(){
+  const list=TRIPS.filter(t=>saved.has(t.id));
+  if(!list.length) return `<div class="wrap saved-head"><h1>Nothing saved yet.</h1>
+    <p style="max-width:40ch;margin-top:16px;font-size:19px">Tap the heart on any trip and it lands here. Then you can see what the whole list would cost.</p>
+    <p style="margin-top:24px"><a class="btn btn-lg btn-pink" href="#/">Go find some</a></p></div>${ctaBlock}`;
+  const total=list.reduce((s,t)=>s+t.price,0), cheapest=list.reduce((a,b)=>a.price<b.price?a:b);
+  return `<div class="wrap saved-head"><h1>Your list</h1><div class="saved-total">
+    <div class="stat"><b>${list.length}</b><span>trips saved</span></div>
+    <div class="stat"><b>${usd(total)}</b><span>all of them, alone</span></div>
+    <div class="stat"><b>${usd(total/4)}</b><span>all of them, split four ways</span></div>
+    <div class="stat"><b>${cheapest.city}</b><span>cheapest at ${usd(cheapest.price)}</span></div>
+  </div></div>
+  <main class="results wrap"><div class="grid">${list.map(tagCard).join("")}</div></main>${ctaBlock}`;}
+
+function viewAbout(){return `<div class="wrap about">
+  <h1>We only sell trips that are cheap for a reason.</h1>
+  <p>Most travel sites start by asking where you want to go. That only works if you already know. Usually you don't — you just know you want to be somewhere else, and you know roughly what you can spend.</p>
+  <p>So OFFPEAK starts with the feeling and the number, and works backwards.</p>
+  <h2>Why things cost less here</h2>
+  <p>Nothing clever. Flights and beds swing hard by month, and most people book the expensive months because that's when they have time off. If you're flexible — and at this stage of your life you probably are — the same trip can cost 30 to 40% less six weeks either side.</p>
+  <p>Every trip page shows all twelve months and what each one costs. Green means cheap. That's the entire business.</p>
+  <h2>On your own, or planned</h2>
+  <p>Every destination comes two ways. <b>On your own</b> is flights and a bed in one city, and then you're free — it's the cheaper one and it's what most people pick. <b>Planned for you</b> is a route across a few places with the transport and the bookings between them already handled, plus someone local who answers messages.</p>
+  <p>Take the planned version if you're going somewhere you'd rather not work out the buses, or with people who say they'll plan and then don't.</p>
+  <h2>How we make money, since you'll wonder</h2>
+  <p>We charge a flat fee per person. ¥800 each if you're going on your own, ¥2,500 each if you want the whole route planned. That's it, and it's the same number whether your trip costs ¥40,000 or ¥200,000.</p>
+  <p>We don't sell you the flight and we don't sell you the bed. You book those yourself, wherever you like, at the price everyone else pays. We take no commission from any hotel or airline, which means when we tell you a place is worth it, there's no money riding on your answer.</p>
+  <h2>Planning it together</h2>
+  <p>Add everyone's names, set a date by which they all have to book, and pay the fee once. Everyone gets a link, books their own flight and bed, and you can see who hasn't. We send the reminders so you don't have to be the person nagging the group chat.</p>
+  <p>Nobody fronts anyone else's money, because there's no shared payment to front. If the trip falls apart before the deadline, the fee comes back.</p>
+  <h2>Cancellation</h2>
+  <p>Free until 14 days before you fly. After that you get the accommodation back but not the flight, because the airline won't give it to us either. We'll tell you this again at checkout so it isn't a surprise.</p>
+  <h2>The honest bit</h2>
+  <p>We're small. There are twelve destinations right now, all places we've been. When that becomes twenty it'll be because someone went, not because a database got bigger.</p>
+  <p style="margin-top:28px"><a class="btn btn-lg btn-pink" href="#/">Start with a vibe</a></p>
+</div>${ctaBlock}`;}
+
+function viewMissing(){return `<div class="wrap about"><h1>That trip doesn't exist.</h1>
+  <p>The link might be old, or we might have retired it. Either way, there are eleven others.</p>
+  <p style="margin-top:24px"><a class="btn btn-lg btn-pink" href="#/">Back to all trips</a></p></div>${ctaBlock}`;}
+
+/* ---------------- home behaviour ---------------- */
+function matches(t){if(t.price>maxBudget)return false;if(!active.size)return true;return [...active].some(v=>t.vibes.includes(v));}
+function renderGrid(){
+  const grid=document.getElementById("grid"); if(!grid) return;
+  const list=TRIPS.filter(matches).sort((a,b)=>a.price-b.price);
+  document.getElementById("rCount").textContent=list.length+" of "+TRIPS.length+" under "+usd(maxBudget);
+  document.getElementById("rTitle").textContent=!active.size?"Everywhere we go":(list.length?"For "+[...active].join(" + "):"Nothing matches that");
+  grid.innerHTML=list.length?list.map(tagCard).join("")
+    :`<div class="empty"><h3>That combination doesn't exist yet.</h3><p>Nothing under ${usd(maxBudget)} feels like that. Raise the budget or drop a vibe.</p><button class="btn btn-blue" id="clearBtn">Clear filters</button></div>`;
+}
+const DEMO=[{n:"You",p:true},{n:"Renz",p:true},{n:"Mika",p:false},{n:"Ari",p:false}];
+function renderDemo(){
+  const el=document.getElementById("friends"); if(!el) return;
+  const share=FEE.solo;
+  document.getElementById("perPerson").textContent=usd(share);
+  const colors=["var(--pink)","var(--aqua)","var(--blue)","var(--paper-2)"];
+  el.innerHTML=DEMO.map((f,i)=>`<div class="friend"><div class="avatar" style="background:${colors[i%4]}">${f.n[0]}</div>
+    <div class="friend-name">${f.n}</div>
+    <button class="paid-btn" type="button" data-demo="${i}" aria-pressed="${f.p}">${f.p?"booked":"not yet"}</button>
+    <div class="friend-amt">${usd(share)}</div></div>`).join("");
+}
+let heroTimer=null;
+function startHero(){
+  clearInterval(heroTimer);
+  const el=document.getElementById("vibeWord"); if(!el) return;
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const W=["unwell","cold","invisible","broke","tiny","awake","far away"]; let i=0;
+  heroTimer=setInterval(()=>{i=(i+1)%W.length;el.textContent=W[i];},2000);
+}
+function resetAll(){
+  active.clear(); maxBudget=1500;
+  document.querySelectorAll(".pill").forEach(p=>p.setAttribute("aria-pressed","false"));
+  const b=document.getElementById("budget");
+  if(b){b.value=220000;document.getElementById("budgetVal").textContent=usd(220000);}
+  renderGrid();
+}
+
+/* ---------------- router ---------------- */
+let curHash="/";
+function route(keepScroll){
+  const h=location.hash.replace(/^#/,"")||"/";
+  const app=document.getElementById("app");
+  const sp=h.match(/^\/plan\/([^/]+)\/([^/]+)\/([^/]+)$/), tr=h.match(/^\/trip\/(.+)$/);
+  if(sp){ if(curHash!==h){people=[{n:"You",paid:true,you:true}];linkMade=false;deadlineDays=14;} app.innerHTML=viewPlan(sp[1],sp[2],sp[3]); }
+  else if(tr){ if(curHash!==h) selMonth=null; app.innerHTML=viewTrip(tr[1]); }
+  else if(h==="/saved") app.innerHTML=viewSaved();
+  else if(h==="/about") app.innerHTML=viewAbout();
+  else { app.innerHTML=viewHome(); renderGrid(); renderDemo(); startHero(); }
+  document.querySelectorAll("#navLinks a").forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+h));
+  syncSaved();
+  if(!keepScroll && curHash!==h) window.scrollTo(0,0);
+  curHash=h;
+}
+window.addEventListener("hashchange",()=>route());
+
+/* ---------------- events ---------------- */
+document.addEventListener("click",e=>{
+  const t=e.target;
+  const save=t.closest("[data-save]");
+  if(save){e.preventDefault();e.stopPropagation();const id=save.dataset.save;
+    saved.has(id)?saved.delete(id):saved.add(id);
+    save.setAttribute("aria-pressed",saved.has(id));
+    if(save.classList.contains("btn")) save.textContent=saved.has(id)?"♥ Saved":"♥ Save this";
+    syncSaved();return;}
+  const pill=t.closest("[data-vibe]");
+  if(pill){const v=pill.dataset.vibe;active.has(v)?active.delete(v):active.add(v);
+    pill.setAttribute("aria-pressed",active.has(v));renderGrid();return;}
+  const mo=t.closest("[data-month]"); if(mo){selMonth=+mo.dataset.month;route(true);return;}
+  const md=t.closest("[data-mode]"); if(md){selMode=md.dataset.mode;route(true);return;}
+  const dl=t.closest("[data-dl]"); if(dl){deadlineDays=+dl.dataset.dl;route(true);return;}
+  const rm=t.closest("[data-rm]"); if(rm){people.splice(+rm.dataset.rm,1);route(true);return;}
+  const pd=t.closest("[data-paid]"); if(pd){const i=+pd.dataset.paid;people[i].paid=!people[i].paid;route(true);return;}
+  const dm=t.closest("[data-demo]"); if(dm){const i=+dm.dataset.demo;DEMO[i].p=!DEMO[i].p;renderDemo();return;}
+  if(t.id==="addBtn"){addPerson();return;}
+  if(t.id==="makeLink"){linkMade=true;route(true);return;}
+  if(t.id==="copyBtn"){
+    const inp=document.getElementById("linkIn");
+    const done=()=>{t.textContent="Copied";setTimeout(()=>t.textContent="Copy",1600);};
+    if(navigator.clipboard) navigator.clipboard.writeText(inp.value).then(done).catch(()=>{inp.select();t.textContent="Press ⌘C";});
+    else {inp.select();t.textContent="Press ⌘C";}
+    return;}
+  if(t.id==="clearBtn"){resetAll();return;}
+  if(t.id==="goPick"){document.getElementById("pick").scrollIntoView();return;}
+  if(t.id==="surpriseBtn"){resetAll();const tp=TRIPS[Math.floor(Math.random()*TRIPS.length)];
+    hitId=tp.id;renderGrid();document.getElementById("c-"+tp.id).scrollIntoView({block:"center"});return;}
+});
+function addPerson(){
+  const inp=document.getElementById("nameIn"); if(!inp) return;
+  const n=inp.value.trim(); if(!n||people.length>=8) return;
+  people.push({n,paid:false}); route(true);
+  const next=document.getElementById("nameIn"); if(next) next.focus();
+}
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="nameIn"){e.preventDefault();addPerson();}});
+document.addEventListener("input",e=>{
+  if(e.target.id==="budget"){maxBudget=+e.target.value;
+    document.getElementById("budgetVal").textContent=usd(maxBudget);renderGrid();}
+});
+route();
+</script>
+<script>
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
