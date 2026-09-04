@@ -1,5 +1,5 @@
 /* Bump CACHE when you change the app, or people keep seeing the old one. */
-const CACHE = "offpeak-v1";
+const CACHE = "offpeak-v2";
 const FILES = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
